@@ -365,50 +365,38 @@
 let currentImageKey = null;
 let currentImageIv = null;
 
+// 加密图片
 async function encryptImage() {
-    const fileInput = document.getElementById('imageFile');
-    if (!fileInput.files[0]) {
-        showMessage('imageMessage', '请先选择图片', true);
+    const file = document.getElementById('imageToEncrypt').files[0];
+    const recipient = document.getElementById('imageRecipient').value.trim();
+
+    if (!file || !recipient) {
+        showMessage('encryptImageMessage', '请选择图片并输入收件人', true);
         return;
     }
 
-    try {
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('recipient', recipient);
 
+    try {
         const response = await fetch('/api/encrypt_image', {
             method: 'POST',
-            headers: {
-                'x-access-token': currentToken
-            },
+            headers: { 'x-access-token': currentToken },
             body: formData
         });
 
         const data = await response.json();
-        
-        if (response.ok) {
-            currentImageData = data.encrypted_data;
-            currentImageKey = data.key;
-            currentImageIv = data.iv;
-            
-            document.getElementById('encryptionKey').textContent = data.key;
-            document.getElementById('encryptionIv').textContent = data.iv;
-            document.getElementById('encryptedImageResult').style.display = 'block';
-            
-            showMessage('imageMessage', '图片加密成功！');
-        } else {
-            showMessage('imageMessage', data.message || '加密失败', true);
-        }
+        document.getElementById('encryptedImageResult').value = data.encrypted_data;
+        showMessage('encryptImageMessage', `图片已加密，可发送给 ${data.recipient}`);
     } catch (error) {
-        showMessage('imageMessage', '加密出错: ' + error.message, true);
+        showMessage('encryptImageMessage', '加密失败: ' + error.message, true);
     }
 }
 
+
 async function decryptImage() {
-    if (!currentImageData || !currentImageKey || !currentImageIv) {
-        showMessage('imageMessage', '没有可解密的图片数据', true);
-        return;
-    }
+    const encryptedData = document.getElementById('encryptedImageData').value.trim();
 
     try {
         const response = await fetch('/api/decrypt_image', {
@@ -417,33 +405,26 @@ async function decryptImage() {
                 'Content-Type': 'application/json',
                 'x-access-token': currentToken
             },
-            body: JSON.stringify({
-                encrypted_data: currentImageData,
-                key: currentImageKey,
-                iv: currentImageIv
-            })
+            body: JSON.stringify({ encrypted_data: encryptedData })
         });
 
-        if (response.ok) {
-            // 创建下载链接
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'decrypted_image.png';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-            
-            showMessage('imageMessage', '图片解密成功，已下载');
-        } else {
-            const data = await response.json();
-            showMessage('imageMessage', data.message || '解密失败', true);
-        }
+        const data = await response.json();
+        const img = document.getElementById('decryptedImagePreview');
+        img.src = `data:${data.mime_type};base64,${data.decrypted_data}`;
+        document.getElementById('decryptedImageContainer').style.display = 'block';
+        showMessage('decryptImageMessage', '图片解密成功');
     } catch (error) {
-        showMessage('imageMessage', '解密出错: ' + error.message, true);
+        showMessage('decryptImageMessage', '解密失败: ' + error.message, true);
     }
+}
+
+// 下载解密后的图片
+function downloadDecryptedImage() {
+    const img = document.getElementById('decryptedImagePreview');
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = `decrypted_${Date.now()}.png`;
+    a.click();
 }
 
 function copyImageKey() {
