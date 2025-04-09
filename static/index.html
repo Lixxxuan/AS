@@ -346,7 +346,7 @@
         <div id="decryptImageMessage" class="message"></div>
     </div>
 </div>
-                    
+
                     <div id="imageMessage" class="message"></div>
                 </div>
             </div>
@@ -505,22 +505,88 @@ function copyImageKey() {
 
         // 复制到剪贴板
         function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            let textToCopy = '';
+    const element = document.getElementById(elementId);
+    let textToCopy = '';
 
-            if (element.tagName === 'TEXTAREA') {
-                textToCopy = element.value;
-            } else {
-                textToCopy = element.textContent;
-            }
+    // 获取要复制的文本
+    if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
+        textToCopy = element.value;
+    } else {
+        textToCopy = element.textContent || element.innerText;
+    }
 
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                alert('已复制到剪贴板');
-            }).catch(err => {
-                console.error('复制失败:', err);
-                alert('复制失败，请手动选择并复制');
-            });
-        }
+    // 方案1：使用现代API（优先）
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            showTempAlert('✓ 已复制');
+        }).catch(err => {
+            fallbackCopy(textToCopy); // 降级方案
+        });
+    } else {
+        fallbackCopy(textToCopy); // 兼容旧浏览器
+    }
+}
+
+// 降级复制方案
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = 0;
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+        const success = document.execCommand('copy');
+        showTempAlert(success ? '✓ 已复制' : '⚠ 请手动复制');
+    } catch (err) {
+        showTempAlert('❌ 复制失败，请手动选择文本');
+    } finally {
+        document.body.removeChild(textarea);
+    }
+}
+
+// 显示临时提示（替代alert）
+function showTempAlert(message) {
+    const alertBox = document.createElement('div');
+    alertBox.style = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #4285f4;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        z-index: 9999;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        animation: fadeIn 0.3s;
+    `;
+    alertBox.textContent = message;
+    document.body.appendChild(alertBox);
+
+    setTimeout(() => {
+        alertBox.style.animation = 'fadeOut 0.3s';
+        setTimeout(() => {
+            document.body.removeChild(alertBox);
+        }, 300);
+    }, 2000);
+}
+
+// 添加CSS动画
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -10px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, 0); }
+        to { opacity: 0; transform: translate(-50%, -10px); }
+    }
+`;
+document.head.appendChild(style);
+
 
         // 注册用户
         async function register() {
