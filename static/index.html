@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全通信平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --error-color: #ea4335;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #202124;
+            --border-color: #dadce0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #3367d6;
+        }
+
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary:hover {
+            background-color: #2d924a;
+        }
+
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .success {
+            background-color: #e6f4ea;
+            color: var(--secondary-color);
+            border-left: 4px solid var(--secondary-color);
+            display: block;
+        }
+
+        .error {
+            background-color: #fce8e6;
+            color: var(--error-color);
+            border-left: 4px solid var(--error-color);
+            display: block;
+        }
+
+        .key-display {
+            background-color: var(--background-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: -1px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .user-info {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .copy-btn {
+            width: auto;
+            padding: 6px 12px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>安全通信平台</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="userInfo" class="user-info" style="display: none;">
+            欢迎, <span id="usernameDisplay"></span> |
+            <a href="#" onclick="logout()" style="color: var(--primary-color);">退出</a>
+        </div>
+
+        <div id="authTabs">
+            <div class="tab-container">
+                <div class="tab active" onclick="openAuthTab('loginTab')">登录</div>
+                <div class="tab" onclick="openAuthTab('registerTab')">注册</div>
+            </div>
+
+            <div id="loginTab" class="tab-content active">
+                <div class="card">
+                    <h2>用户登录</h2>
+                    <div class="form-group">
+                        <label for="loginUsername">用户名</label>
+                        <input type="text" id="loginUsername" placeholder="输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">密码</label>
+                        <input type="password" id="loginPassword" placeholder="输入密码">
+                    </div>
+                    <button onclick="login()">登录</button>
+                    <div id="loginMessage" class="message"></div>
+                </div>
+            </div>
+
+            <div id="registerTab" class="tab-content">
+                <div class="card">
+                    <h2>注册新用户</h2>
+                    <div class="form-group">
+                        <label for="regUsername">用户名</label>
+                        <input type="text" id="regUsername" placeholder="输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">密码</label>
+                        <input type="password" id="regPassword" placeholder="输入密码">
+                    </div>
+                    <button class="secondary" onclick="register()">注册</button>
+                    <div id="regMessage" class="message"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="appContent" style="display: none;">
+            <div class="tab-container">
+                <div class="tab active" onclick="openAppTab('keysTab')">我的公钥</div>
+                <div class="tab" onclick="openAppTab('encryptTab')">加密消息</div>
+                <div class="tab" onclick="openAppTab('decryptTab')">解密消息</div>
+                <div class="tab" onclick="openAppTab('imageTab')">图片加密</div>
+            </div>
+
+            <div id="keysTab" class="tab-content active">
+                <div class="card">
+                    <h2>我的公钥</h2>
+                    <p>将此公钥提供给需要向您发送加密消息的人</p>
+                    <button onclick="getMyPublicKey()">获取我的公钥</button>
+                    <div class="form-group">
+                        <label>公钥</label>
+                        <div id="publicKeyDisplay" class="key-display">点击上方按钮获取公钥</div>
+                        <button class="copy-btn secondary" onclick="copyToClipboard('publicKeyDisplay')">复制公钥</button>
+                    </div>
+                    <div id="keysMessage" class="message"></div>
+                </div>
+            </div>
+
+            <div id="encryptTab" class="tab-content">
+                <div class="card">
+                    <h2>加密消息</h2>
+                    <div class="form-group">
+                        <label for="recipientUsername">收件人用户名</label>
+                        <input type="text" id="recipientUsername" placeholder="输入收件人用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="messageToEncrypt">要加密的消息</label>
+                        <textarea id="messageToEncrypt" placeholder="输入要加密的消息"></textarea>
+                    </div>
+                    <button onclick="encryptMessage()">加密消息</button>
+                    <div class="form-group">
+                        <label>加密结果</label>
+                        <textarea id="encryptedResult" readonly placeholder="加密后的消息将显示在这里"></textarea>
+                        <button class="copy-btn secondary" onclick="copyToClipboard('encryptedResult')">复制加密结果</button>
+                    </div>
+                    <div id="encryptMessage" class="message"></div>
+                </div>
+            </div>
+
+            <div id="decryptTab" class="tab-content">
+                <div class="card">
+                    <h2>解密消息</h2>
+                    <div class="form-group">
+                        <label for="messageToDecrypt">要解密的消息</label>
+                        <textarea id="messageToDecrypt" placeholder="粘贴收到的加密消息 (Base64格式)"></textarea>
+                    </div>
+                    <button class="secondary" onclick="decryptMessage()">解密消息</button>
+                    <div class="form-group">
+                        <label>解密结果</label>
+                        <textarea id="decryptedResult" readonly placeholder="解密后的消息将显示在这里"></textarea>
+                        <button class="copy-btn" onclick="copyToClipboard('decryptedResult')">复制解密结果</button>
+                    </div>
+                    <div id="decryptMessage" class="message"></div>
+                </div>
+            </div>
+            <div id="imageTab" class="tab-content">
+                <div class="card">
+                    <h2>图片加密/解密</h2>
+                    <div class="form-group">
+                        <label for="imageFile">选择图片（支持PNG/JPG）</label>
+                        <input type="file" id="imageFile" accept="image/png, image/jpeg">
+                    </div>
+                    <button onclick="encryptImage()">加密图片</button>
+                    
+                    <div id="encryptedImageResult" class="form-group" style="display:none;">
+                        <label>加密结果</label>
+                        <div class="key-display">
+                            <p>密钥: <span id="encryptionKey"></span></p>
+                            <p>IV: <span id="encryptionIv"></span></p>
+                        </div>
+                        <button class="copy-btn" onclick="copyImageKey()">复制密钥</button>
+                        <button class="secondary" onclick="decryptImage()">解密并下载图片</button>
+                    </div>
+                    
+                    <div id="imageMessage" class="message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentToken = null;
+        let currentUsername = null;
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+        });
+
+        let currentImageData = null;
+let currentImageKey = null;
+let currentImageIv = null;
+
+async function encryptImage() {
+    const fileInput = document.getElementById('imageFile');
+    if (!fileInput.files[0]) {
+        showMessage('imageMessage', '请先选择图片', true);
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        const response = await fetch('/api/encrypt_image', {
+            method: 'POST',
+            headers: {
+                'x-access-token': currentToken
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            currentImageData = data.encrypted_data;
+            currentImageKey = data.key;
+            currentImageIv = data.iv;
+            
+            document.getElementById('encryptionKey').textContent = data.key;
+            document.getElementById('encryptionIv').textContent = data.iv;
+            document.getElementById('encryptedImageResult').style.display = 'block';
+            
+            showMessage('imageMessage', '图片加密成功！');
+        } else {
+            showMessage('imageMessage', data.message || '加密失败', true);
+        }
+    } catch (error) {
+        showMessage('imageMessage', '加密出错: ' + error.message, true);
+    }
+}
+
+async function decryptImage() {
+    if (!currentImageData || !currentImageKey || !currentImageIv) {
+        showMessage('imageMessage', '没有可解密的图片数据', true);
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/decrypt_image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': currentToken
+            },
+            body: JSON.stringify({
+                encrypted_data: currentImageData,
+                key: currentImageKey,
+                iv: currentImageIv
+            })
+        });
+
+        if (response.ok) {
+            // 创建下载链接
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'decrypted_image.png';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            
+            showMessage('imageMessage', '图片解密成功，已下载');
+        } else {
+            const data = await response.json();
+            showMessage('imageMessage', data.message || '解密失败', true);
+        }
+    } catch (error) {
+        showMessage('imageMessage', '解密出错: ' + error.message, true);
+    }
+}
+
+function copyImageKey() {
+    const text = `密钥: ${currentImageKey}\nIV: ${currentImageIv}`;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('密钥已复制到剪贴板');
+    });
+}
+
+        // 检查认证状态
+        function checkAuthState() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (token && username) {
+                currentToken = token;
+                currentUsername = username;
+                showAppContent();
+            } else {
+                showAuthContent();
+            }
+        }
+
+        // 显示认证内容
+        function showAuthContent() {
+            document.getElementById('authTabs').style.display = 'block';
+            document.getElementById('appContent').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+            openAuthTab('loginTab');
+        }
+
+        // 显示应用内容
+        function showAppContent() {
+            document.getElementById('authTabs').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('usernameDisplay').textContent = currentUsername;
+            openAppTab('keysTab');
+        }
+
+        // 打开认证标签页
+        function openAuthTab(tabId) {
+            document.querySelectorAll('#authTabs .tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('#authTabs .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 打开应用标签页
+        function openAppTab(tabId) {
+            document.querySelectorAll('#appContent .tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('#appContent .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 显示消息
+        function showMessage(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'message ' + (isError ? 'error' : 'success');
+            element.style.display = 'block';
+
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            let textToCopy = '';
+
+            if (element.tagName === 'TEXTAREA') {
+                textToCopy = element.value;
+            } else {
+                textToCopy = element.textContent;
+            }
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动选择并复制');
+            });
+        }
+
+        // 注册用户
+        async function register() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+
+            if (!username || !password) {
+                showMessage('regMessage', '用户名和密码不能为空', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                username: username,
+                password: password
+                })
+                });
+
+        // 首先检查响应状态
+            if (!response.ok) {
+            // 尝试获取错误信息
+                const errorData = await response.json().catch(() => null);
+                const errorMsg = errorData?.message || `HTTP error! status: ${response.status}`;
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+            showMessage('regMessage', data.message || '注册成功！请登录');
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            openAuthTab('loginTab');
+
+        } catch (error) {
+        console.error('Registration error:', error);
+        showMessage('regMessage', `注册失败: ${error.message}`, true);
+        }
+    }
+
+
+        // 用户登录
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!username || !password) {
+                showMessage('loginMessage', '用户名和密码不能为空', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentToken = data.token;
+                    currentUsername = data.username;
+
+                    // 保存到本地存储
+                    localStorage.setItem('token', currentToken);
+                    localStorage.setItem('username', currentUsername);
+
+                    showMessage('loginMessage', '登录成功！');
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+
+                    showAppContent();
+                } else {
+                    showMessage('loginMessage', data.message || '登录失败', true);
+                }
+            } catch (error) {
+                showMessage('loginMessage', '网络错误: ' + error.message, true);
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            currentToken = null;
+            currentUsername = null;
+            showAuthContent();
+        }
+
+        // 获取我的公钥
+        async function getMyPublicKey() {
+            if (!currentToken) {
+                showMessage('keysMessage', '请先登录', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/keys', {
+                    method: 'GET',
+                    headers: {
+                        'x-access-token': currentToken
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('publicKeyDisplay').textContent = data.public_key;
+                    showMessage('keysMessage', '公钥获取成功');
+                } else {
+                    showMessage('keysMessage', data.message || '获取公钥失败', true);
+                }
+            } catch (error) {
+                showMessage('keysMessage', '网络错误: ' + error.message, true);
+            }
+        }
+
+        // 加密消息
+        async function encryptMessage() {
+            if (!currentToken) {
+                showMessage('encryptMessage', '请先登录', true);
+                return;
+            }
+
+            const recipient = document.getElementById('recipientUsername').value.trim();
+            const message = document.getElementById('messageToEncrypt').value.trim();
+
+            if (!recipient || !message) {
+                showMessage('encryptMessage', '收件人和消息不能为空', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/encrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': currentToken
+                    },
+                    body: JSON.stringify({
+                        recipient: recipient,
+                        message: message
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('encryptedResult').value = data.encrypted_message;
+                    showMessage('encryptMessage', `消息已加密，可发送给 ${data.recipient}`);
+                } else {
+                    showMessage('encryptMessage', data.message || '加密失败', true);
+                }
+            } catch (error) {
+                showMessage('encryptMessage', '网络错误: ' + error.message, true);
+            }
+        }
+
+        // 解密消息
+        async function decryptMessage() {
+            if (!currentToken) {
+                showMessage('decryptMessage', '请先登录', true);
+                return;
+            }
+
+            const encryptedMessage = document.getElementById('messageToDecrypt').value.trim();
+
+            if (!encryptedMessage) {
+                showMessage('decryptMessage', '请输入要解密的消息', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/decrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': currentToken
+                    },
+                    body: JSON.stringify({
+                        encrypted_message: encryptedMessage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('decryptedResult').value = data.decrypted_message;
+                    showMessage('decryptMessage', '消息解密成功');
+                } else {
+                    showMessage('decryptMessage', data.message || '解密失败', true);
+                }
+            } catch (error) {
+                showMessage('decryptMessage', '网络错误: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>
