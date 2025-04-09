@@ -251,7 +251,8 @@
                 <div class="tab active" onclick="openAppTab('keysTab')">我的公钥</div>
                 <div class="tab" onclick="openAppTab('encryptTab')">加密消息</div>
                 <div class="tab" onclick="openAppTab('decryptTab')">解密消息</div>
-                <div class="tab" onclick="openAppTab('imageTab')">图片加密</div>
+                <div class="tab" onclick="openAppTab('encryptImageTab')">图片加密</div>
+                <div class="tab" onclick="openAppTab('decryptImageTab')">图片解密</div>
             </div>
 
             <div id="keysTab" class="tab-content active">
@@ -305,24 +306,46 @@
                     <div id="decryptMessage" class="message"></div>
                 </div>
             </div>
-            <div id="imageTab" class="tab-content">
-                <div class="card">
-                    <h2>图片加密/解密</h2>
-                    <div class="form-group">
-                        <label for="imageFile">选择图片（支持PNG/JPG）</label>
-                        <input type="file" id="imageFile" accept="image/png, image/jpeg">
-                    </div>
-                    <button onclick="encryptImage()">加密图片</button>
-                    
-                    <div id="encryptedImageResult" class="form-group" style="display:none;">
-                        <label>加密结果</label>
-                        <div class="key-display">
-                            <p>密钥: <span id="encryptionKey"></span></p>
-                            <p>IV: <span id="encryptionIv"></span></p>
-                        </div>
-                        <button class="copy-btn" onclick="copyImageKey()">复制密钥</button>
-                        <button class="secondary" onclick="decryptImage()">解密并下载图片</button>
-                    </div>
+            <div id="encryptImageTab" class="tab-content">
+    <div class="card">
+        <h2>图片加密</h2>
+        <div class="form-group">
+            <label for="imageToEncrypt">选择图片</label>
+            <input type="file" id="imageToEncrypt" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="imageRecipient">收件人用户名</label>
+            <input type="text" id="imageRecipient" placeholder="输入收件人用户名">
+        </div>
+        <button onclick="encryptImage()">加密图片</button>
+        <div class="form-group">
+            <label>加密结果</label>
+            <textarea id="encryptedImageResult" readonly placeholder="加密后的Base64数据将显示在这里"></textarea>
+            <button class="copy-btn" onclick="copyToClipboard('encryptedImageResult')">复制加密结果</button>
+        </div>
+        <div id="encryptImageMessage" class="message"></div>
+    </div>
+</div>
+
+<!-- 图片解密 -->
+<div id="decryptImageTab" class="tab-content">
+    <div class="card">
+        <h2>图片解密</h2>
+        <div class="form-group">
+            <label for="encryptedImageData">加密数据</label>
+            <textarea id="encryptedImageData" placeholder="粘贴收到的加密图片数据 (Base64)"></textarea>
+        </div>
+        <button class="secondary" onclick="decryptImage()">解密图片</button>
+        <div class="form-group">
+            <label>解密结果</label>
+            <div id="decryptedImageContainer" style="display:none;">
+                <img id="decryptedImagePreview" style="max-width:100%; margin-top:10px;">
+                <button class="copy-btn" onclick="downloadDecryptedImage()">下载图片</button>
+            </div>
+        </div>
+        <div id="decryptImageMessage" class="message"></div>
+    </div>
+</div>
                     
                     <div id="imageMessage" class="message"></div>
                 </div>
