@@ -79,6 +79,7 @@ def token_required(f):
 
     return decorated
 
+
 @app.route('/api/test_db', methods=['GET'])
 def test_db():
     try:
@@ -89,10 +90,12 @@ def test_db():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 # 静态文件路由
 @app.route('/')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
+
 
 @app.route('/<path:path>')
 def static_file(path):
@@ -185,7 +188,7 @@ def login():
             key=app.config['SECRET_KEY'],
             algorithm="HS256"
         )
-        
+
         # 确保token是字符串类型
         if isinstance(token, bytes):
             token = token.decode('utf-8')
@@ -198,34 +201,37 @@ def login():
     except Exception as e:
         app.logger.error(f'JWT生成失败: {str(e)}')
         return jsonify({'message': '服务器错误'}), 500
-# 图片加密（返回Base64字符串）
+
+
 @app.route('/api/encrypt_image', methods=['POST'])
 @token_required
 def encrypt_image(current_user):
     if 'file' not in request.files:
         return jsonify({'message': '未上传文件'}), 400
-    
+
     recipient = request.form.get('recipient')
     file = request.files['file']
-    
-     if file.filename == '':
+
+    if file.filename == '':
         return jsonify({'message': '未选择文件'}), 400
-    
-    # 生成随机密钥和初始化向量
+
+
+# 生成随机密钥和初始化向量
     key = os.urandom(32)  # AES-256
     iv = os.urandom(16)
-    
-    # 创建加密器
+
+# 创建加密器
     cipher = AES.new(key, AES.MODE_CBC, iv)
-    
-    # 读取并加密图片
+
+# 读取并加密图片
     image_data = file.read()
     encrypted_data = cipher.encrypt(pad(image_data, AES.block_size))
-    
+
     return jsonify({
         'encrypted_data': base64.b64encode(encrypted_data).decode('utf-8'),
         'recipient': recipient
     })
+
 
 # 图片解密
 @app.route('/api/decrypt_image', methods=['POST'])
@@ -233,19 +239,19 @@ def encrypt_image(current_user):
 def decrypt_image(current_user):
     data = request.get_json()
     encrypted_data = base64.b64decode(data['encrypted_data'])
-    
+
     try:
         # 解码数据
         encrypted_data = base64.b64decode(data['encrypted_data'])
         key = base64.b64decode(data['key'])
         iv = base64.b64decode(data['iv'])
-        
+
         # 创建解密器
         cipher = AES.new(key, AES.MODE_CBC, iv)
-        
+
         # 解密数据
         decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
-        
+
         # 返回解密后的图片数据
         return Response(
             decrypted_data,
@@ -254,9 +260,10 @@ def decrypt_image(current_user):
         )
     except Exception as e:
         return jsonify({
-        'decrypted_data': base64.b64encode(decrypted_data).decode('utf-8'),
-        'mime_type': 'image/png'  # 自动检测图片类型更佳
-    })
+            'decrypted_data': base64.b64encode(decrypted_data).decode('utf-8'),
+            'mime_type': 'image/png'  # 自动检测图片类型更佳
+        })
+
 
 @app.route('/api/keys', methods=['GET'])
 @token_required
